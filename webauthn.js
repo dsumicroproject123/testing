@@ -1,6 +1,7 @@
-
-// webauthn.js
 const registerButton = document.getElementById("registerButton");
+const loginButton = document.getElementById("loginButton");
+const registrationResult = document.getElementById("registrationResult");
+const loginResult = document.getElementById("loginResult");
 
 registerButton.addEventListener("click", async () => {
     try {
@@ -9,7 +10,7 @@ registerButton.addEventListener("click", async () => {
             publicKey: {
                 // User and challenge information
                 rp: { name: "DSUMicroProject123 Testing" },
-                user: { id: new Uint8Array(16), name: "harshalkanaskar1998@gmail.com", displayName: "Harshal kanaskar" },
+                user: { id: new Uint8Array(16), name: "harshalkanaskar1998@gmail.com", displayName: "Harshal Kanaskar" },
                 challenge: new Uint8Array(32),
 
                 // Specify the desired authenticator
@@ -27,14 +28,14 @@ registerButton.addEventListener("click", async () => {
 
         // Send the credential to the server for validation and storage
         // Store publicKeyCredential on the server
-        alert("Credential registered:", publicKeyCredential);
+
+        // Display registration result
+        registrationResult.textContent = "Credential registered successfully.";
     } catch (error) {
-        alert("Registration failed:", error);
+        // Display registration error
+        registrationResult.textContent = "Registration failed: " + error;
     }
 });
-// webauthn.js
-
-const loginButton = document.getElementById("loginButton");
 
 loginButton.addEventListener("click", async () => {
     try {
@@ -52,8 +53,11 @@ loginButton.addEventListener("click", async () => {
         });
 
         // Send the publicKeyCredential to the server for validation
-        alert("Authentication successful:", publicKeyCredential);
+
+        // Display authentication result
+        loginResult.textContent = "Authentication successful.";
     } catch (error) {
-        alert("Authentication failed:", error);
+        // Display authentication error
+        loginResult.textContent = "Authentication failed: " + error;
     }
 });
