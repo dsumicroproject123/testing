@@ -3,31 +3,38 @@ const loginButton = document.getElementById("loginButton");
 const registrationResult = document.getElementById("registrationResult");
 const loginResult = document.getElementById("loginResult");
 
+let publicKeyCredentialOptions = {};
+
 registerButton.addEventListener("click", async () => {
     try {
+        // Fetch options from the server for registration
+        const response = await fetch("/webauthn/register-options", {
+            method: "POST",
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+        }
+
+        publicKeyCredentialOptions = await response.json();
+
         // Request a credential creation
         const publicKeyCredential = await navigator.credentials.create({
-            publicKey: {
-                // User and challenge information
-                rp: { name: "dsumicroproject123/testing/settings/pages"},
-                user: { id: new Uint8Array(16), name: "harshalkanaskar1998@gmail.com", displayName: "Harshal Kanaskar" },
-                challenge: new Uint8Array(32),
-
-                // Specify the desired authenticator
-                authenticatorSelection: {
-                    userVerification: "required",
-                    requireResidentKey: false,
-                },
-
-                // Specify the allowed credential types (e.g., public-key or password)
-                pubKeyCredParams: [
-                    { type: "public-key", alg: -7 },
-                ],
-            },
+            publicKey: publicKeyCredentialOptions,
         });
 
         // Send the credential to the server for validation and storage
-        // Store publicKeyCredential on the server
+        const credentialResponse = await fetch("/webauthn/register", {
+            method: "POST",
+            body: JSON.stringify(publicKeyCredential),
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!credentialResponse.ok) {
+            throw new Error(`Server returned ${credentialResponse.status}`);
+        }
 
         // Display registration result
         registrationResult.textContent = "Credential registered successfully.";
@@ -39,20 +46,34 @@ registerButton.addEventListener("click", async () => {
 
 loginButton.addEventListener("click", async () => {
     try {
+        // Fetch options from the server for authentication
+        const response = await fetch("/webauthn/login-options", {
+            method: "POST",
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+        }
+
+        publicKeyCredentialOptions = await response.json();
+
         // Request an authentication
         const publicKeyCredential = await navigator.credentials.get({
-            publicKey: {
-                challenge: new Uint8Array(32),
-                rpId: "github.com",
-
-                allowCredentials: [
-                    // Retrieve the user's registered credentials from the server
-                    // (They must have been stored during registration)
-                ],
-            },
+            publicKey: publicKeyCredentialOptions,
         });
 
         // Send the publicKeyCredential to the server for validation
+        const authenticationResponse = await fetch("/webauthn/login", {
+            method: "POST",
+            body: JSON.stringify(publicKeyCredential),
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!authenticationResponse.ok) {
+            throw new Error(`Server returned ${authenticationResponse.status}`);
+        }
 
         // Display authentication result
         loginResult.textContent = "Authentication successful.";
