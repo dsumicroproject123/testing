@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from webauthn import WebAuthn
 import base64
+import mydatabase  # Import your mydatabase.py module
 
 app = Flask(__name__)
 
@@ -8,7 +9,7 @@ app = Flask(__name__)
 webauthn = WebAuthn(app)
 
 # Mock database (replace with a real database)
-users = {}
+# users = {}  # Comment out or remove this line
 
 @app.route('/')
 def index():
@@ -21,7 +22,8 @@ def get_registration_options():
 
     # Generate and store registration options
     options = webauthn.register_begin(user_id, username, display_name=username)
-    users[user_id] = {'name': username, 'options': options}
+    mydatabase.create_user(username, '', '')  # Create a user entry in the database
+    # users[user_id] = {'name': username, 'options': options}
 
     return jsonify(options)
 
