@@ -4,6 +4,11 @@ import base64  # For handling byte strings
 
 app = Flask(__name__)
 
+# Function to establish a database connection
+def get_db_connection():
+    conn = sqlite3.connect('mydatabase.db')
+    return conn
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -20,7 +25,7 @@ def register_user():
         credential_key = base64.b64encode(credential_key.encode()).decode()
 
         # Insert data into the SQLite database
-        conn = sqlite3.connect('mydatabase.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("INSERT INTO users (username, email, credential_key) VALUES (?, ?, ?)",
                        (username, email, credential_key))
