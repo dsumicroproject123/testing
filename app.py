@@ -1,62 +1,57 @@
 from flask import Flask, render_template, request, jsonify
-from webauthn import WebAuthn
-import base64
-import mydatabase  # Import your mydatabase.py module
+import sqlite3
+import base64  # For handling byte strings
 
 app = Flask(__name__)
 
-# Create an instance of WebAuthn
-webauthn = WebAuthn(app)
-
-# Mock database (replace with a real database)
-# users = {}  # Comment out or remove this line
+# Function to establish a database connection
+def get_db_connection():
+    conn = sqlite3.connect('mydatabase.db')
+    return conn
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/webauthn/register-options', methods=['POST'])
-def get_registration_options():
-    username = request.form.get('username')
-    user_id = base64.urlsafe_b64encode(username.encode()).decode()
+@app.route('/register', methods=['POST'])
+def register_user():
+    try:
+        # Parse data from the registration form
+        username = request.form.get('username')
+        email = request.form.get('email')
+        credential_key = request.form.get('credential_key')
 
-    # Generate and store registration options
-    options = webauthn.register_begin(user_id, username, display_name=username)
-    mydatabase.create_user(username, '', '')  # Create a user entry in the database
-    # users[user_id] = {'name': username, 'options': options}
+        # Base64-encode the credential_key (it should be a byte string)
+        credential_key = base64.b64encode(credential_key.encode()).decode()
 
-    return jsonify(options)
+        # Insert data into the SQLite database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO users (username, email, credential_key) VALUES (?, ?, ?)",
+                       (username, email, credential_key))
+        conn.commit()
+        conn.close()
 
-@app.route('/webauthn/register', methods=['POST'])
-def complete_registration():
-    credential = request.json
-    user_id = credential['user']
+        response = {'message': 'Registration successful'}
+    except Exception as e:
+        response = {'error': str(e)}
 
-    # Verify and store the credential
-    webauthn.register_complete(users[user_id]['options'], credential)
+    return jsonify(response)
 
-    return ('', 204)
+@app.route('/login', methods=['POST'])
+def login_user():
+    try:
+        # Implement your login logic here using mydatabase.py
+        # Retrieve the user's stored credential_key from the database
 
-@app.route('/webauthn/login-options', methods=['POST'])
-def get_login_options():
-    username = request.form.get('username')
-    user_id = base64.urlsafe_b64encode(username.encode()).decode()
+        # Compare the retrieved credential_key with the one sent from the WebAuthn login
 
-    # Generate and store authentication options
-    options = webauthn.authenticate_begin(user_id)
-    users[user_id]['authentication'] = options
+        # If they match, return a success response
+        response = {'message': 'Login successful'}
+    except Exception as e:
+        response = {'error': str(e)}
 
-    return jsonify(options)
-
-@app.route('/webauthn/login', methods=['POST'])
-def complete_login():
-    credential = request.json
-    user_id = credential['user']
-
-    # Verify the authentication
-    webauthn.authenticate_complete(users[user_id]['authentication'], credential)
-
-    return ('', 204)
+    return jsonify(response)
 
 if __name__ == '__main__':
     app.run(debug=True)
