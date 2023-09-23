@@ -9,7 +9,7 @@ registerButton.addEventListener("click", async () => {
         const publicKeyCredential = await navigator.credentials.create({
             publicKey: {
                 // User and challenge information
-                rp: { name: "DSUMicroProject123 Testing"},
+                rp: { name: "github.com"},
                 user: { id: new Uint8Array(16), name: "harshalkanaskar1998@gmail.com", displayName: "Harshal Kanaskar" },
                 challenge: new Uint8Array(32),
 
