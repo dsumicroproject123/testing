@@ -9,7 +9,7 @@ registerButton.addEventListener("click", async () => {
         const publicKeyCredential = await navigator.credentials.create({
             publicKey: {
                 // User and challenge information
-                rp: { name: "DSUMicroProject123 Testing" },
+                rp: { name: "DSUMicroProject123 Testing",id: "github.com" },
                 user: { id: new Uint8Array(16), name: "harshalkanaskar1998@gmail.com", displayName: "Harshal Kanaskar" },
                 challenge: new Uint8Array(32),
 
@@ -43,7 +43,7 @@ loginButton.addEventListener("click", async () => {
         const publicKeyCredential = await navigator.credentials.get({
             publicKey: {
                 challenge: new Uint8Array(32),
-                rpId: "dsumicroproject123.github.io",
+                rpId: "github.com",
 
                 allowCredentials: [
                     // Retrieve the user's registered credentials from the server
