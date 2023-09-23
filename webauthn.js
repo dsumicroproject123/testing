@@ -8,7 +8,7 @@ if (!window.PublicKeyCredential) {
 
     // Register button click event
     registerButton.addEventListener('click', () => {
-        const username = 'YourUsername';  // Replace with the actual username
+        const username = 'Harshal Kanaskar';  // Replace with the actual username
         const user_id = generateRandomUserID();  // Generate a random user ID
         fetch('/register', { method: 'POST', body: JSON.stringify({ username, user_id }) })
             .then(response => response.json())
