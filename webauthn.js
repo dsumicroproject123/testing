@@ -42,7 +42,7 @@ loginButton.addEventListener("click", async () => {
         const publicKeyCredential = await navigator.credentials.get({
             publicKey: {
                 challenge: new Uint8Array(32),
-                rpId: "yourwebsite.com",
+                rpId: "http://127.0.0.1:5500/register.html",
                 allowCredentials: [
                     // Retrieve the user's registered credentials from the server
                     // (They must have been stored during registration)
