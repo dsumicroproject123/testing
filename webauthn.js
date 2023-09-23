@@ -43,7 +43,7 @@ loginButton.addEventListener("click", async () => {
         const publicKeyCredential = await navigator.credentials.get({
             publicKey: {
                 challenge: new Uint8Array(32),
-                rpId: "github.com",
+                rpId: "WebAuthn Demo",
 
                 allowCredentials: [
                     // Retrieve the user's registered credentials from the server
