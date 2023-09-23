@@ -2,15 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
     <title>WebAuthn Demo</title>
 </head>
 <body>
-     
-    <p>Fingerprint Registration Form</p>
-    <button id="registerButton">Register</button>
-    <button id="loginButton">Login</button>
-    <script src="webauthn.js"></script>
+    <h1>WebAuthn Fingerprint Demo</h1>
     
+    <!-- Registration and Login buttons -->
+    <button id="registerButton">Register with Fingerprint</button>
+    <button id="loginButton">Login with Fingerprint</button>
+    
+    <!-- Display registration and login results here -->
+    <div id="registrationResult"></div>
+    <div id="loginResult"></div>
+
+    <script src="webauthn.js"></script>
 </body>
 </html>
