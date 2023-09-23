@@ -1,57 +1,97 @@
 from flask import Flask, render_template, request, jsonify
-import sqlite3
-import base64  # For handling byte strings
+from webauthn import PublicKeyCredentialCreationOptions, PublicKeyCredentialRequestOptions, WebAuthn
+import os
+from mydatabase import create_tables, add_user, is_user_registered
 
 app = Flask(__name__)
+app.secret_key = os.urandom(32)
 
-# Function to establish a database connection
-def get_db_connection():
-    conn = sqlite3.connect('mydatabase.db')
-    return conn
+# Initialize WebAuthn
+webauthn = WebAuthn(app, attestation="direct")
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/register', methods=['POST'])
-def register_user():
+def register():
+    username = request.form.get('username')
+    user_id = request.form.get('user_id')
+
+    if is_user_registered(user_id):
+        return jsonify({'message': 'User already registered'}), 400
+
+    options = webauthn.register_begin(
+        {
+            "user": {"id": user_id, "name": username, "displayName": username},
+            "challenge": webauthn.generate_challenge(),
+        }
+    )
+
+    return jsonify(options)
+
+@app.route('/register/verify', methods=['POST'])
+def register_verify():
+    response = request.get_json()
+    user_id = response['user_id']
+
     try:
-        # Parse data from the registration form
-        username = request.form.get('username')
-        email = request.form.get('email')
-        credential_key = request.form.get('credential_key')
-
-        # Base64-encode the credential_key (it should be a byte string)
-        credential_key = base64.b64encode(credential_key.encode()).decode()
-
-        # Insert data into the SQLite database
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO users (username, email, credential_key) VALUES (?, ?, ?)",
-                       (username, email, credential_key))
-        conn.commit()
-        conn.close()
-
-        response = {'message': 'Registration successful'}
+        attestation_object = response['attestationObject']
+        client_data = response['clientDataJSON']
+        webauthn.register_complete(
+            user_id,
+            PublicKeyCredentialCreationOptions(
+                response['publicKey'],
+                attestation_object,
+                client_data,
+                response['type'],
+            ),
+        )
+        if add_user(response['username'], user_id):
+            return jsonify({'message': 'Registration successful'})
+        else:
+            return jsonify({'message': 'User already registered'}), 400
     except Exception as e:
-        response = {'error': str(e)}
-
-    return jsonify(response)
+        return jsonify({'message': f'Registration failed: {str(e)}'}), 400
 
 @app.route('/login', methods=['POST'])
-def login_user():
+def login():
+    user_id = request.form.get('user_id')
+
+    if not is_user_registered(user_id):
+        return jsonify({'message': 'User not registered'}), 400
+
+    options = webauthn.authenticate_begin(
+        {
+            "user_id": user_id,
+            "challenge": webauthn.generate_challenge(),
+        }
+    )
+
+    return jsonify(options)
+
+@app.route('/login/verify', methods=['POST'])
+def login_verify():
+    response = request.get_json()
+    user_id = response['user_id']
+
+    if not is_user_registered(user_id):
+        return jsonify({'message': 'User not registered'}), 400
+
     try:
-        # Implement your login logic here using mydatabase.py
-        # Retrieve the user's stored credential_key from the database
-
-        # Compare the retrieved credential_key with the one sent from the WebAuthn login
-
-        # If they match, return a success response
-        response = {'message': 'Login successful'}
+        webauthn.authenticate_complete(
+            user_id,
+            PublicKeyCredentialRequestOptions(
+                response['publicKey'],
+                response['authenticatorData'],
+                response['clientDataJSON'],
+                response['signature'],
+            ),
+        )
+        return jsonify({'message': 'Login successful'})
     except Exception as e:
-        response = {'error': str(e)}
-
-    return jsonify(response)
+        return jsonify({'message': f'Login failed: {str(e)}'}), 400
 
 if __name__ == '__main__':
+    create_tables()  # Create the database tables
     app.run(debug=True)
