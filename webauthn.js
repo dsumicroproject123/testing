@@ -8,7 +8,7 @@ registerButton.addEventListener("click", async () => {
         const publicKeyCredential = await navigator.credentials.create({
             publicKey: {
                 // User and challenge information
-                rp: { name: "http://127.0.0.1:5500/register.html" },
+                rp: { name: "DSUMicroProject123 Testing" },
                 user: { id: new Uint8Array(16), name: "harshalkanaskar1998@gmail.com", displayName: "Harshal kanaskar" },
                 challenge: new Uint8Array(32),
 
@@ -42,7 +42,7 @@ loginButton.addEventListener("click", async () => {
         const publicKeyCredential = await navigator.credentials.get({
             publicKey: {
                 challenge: new Uint8Array(32),
-                rpId: "http://127.0.0.1:5500/register.html",
+                rpId: "DSUMicroProject123 Testing",
                 allowCredentials: [
                     // Retrieve the user's registered credentials from the server
                     // (They must have been stored during registration)
